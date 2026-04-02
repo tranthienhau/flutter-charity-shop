@@ -18,7 +18,7 @@ class LoadingOverlay extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🏪', style: TextStyle(fontSize: 40)),
+              const Icon(Icons.storefront, size: 40, color: Color(0xFF16A34A)),
               const SizedBox(height: 16),
               const Text(
                 'Loading Charity Shop...',

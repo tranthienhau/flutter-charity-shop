@@ -37,11 +37,11 @@ class _ProductDisplay3DState extends State<ProductDisplay3D> {
 
   Offset _project(double x, double y, double z) {
     final cx = widget.sceneSize.width / 2;
-    final cy = widget.sceneSize.height / 2;
+    final cy = widget.sceneSize.height / 2.2;
     final scale = widget.zoom *
         math.min(widget.sceneSize.width, widget.sceneSize.height) *
-        0.35;
-    const d = 2.5;
+        0.4;
+    const d = 3.0;
 
     final cosY = math.cos(widget.rotationY);
     final sinY = math.sin(widget.rotationY);
@@ -53,32 +53,36 @@ class _ProductDisplay3DState extends State<ProductDisplay3D> {
     final ry = y * cosX - rz * sinX;
     final rz2 = y * sinX + rz * cosX;
 
-    final perspective = 5.0 / (5.0 + rz2 + d);
+    final perspective = 4.5 / (4.5 + rz2 + d);
     return Offset(
       cx + rx * scale * perspective,
       cy + ry * scale * perspective,
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final pos = _project(widget.x, widget.y, widget.z);
-    const d = 2.5;
+  double _getScale() {
+    const d = 3.0;
     final rz = widget.x * math.sin(widget.rotationY) +
         widget.z * math.cos(widget.rotationY);
     final rz2 = widget.y * math.sin(widget.rotationX) +
         rz * math.cos(widget.rotationX);
-    final perspective = 5.0 / (5.0 + rz2 + d);
-    final cardScale = perspective * widget.zoom * 0.85;
+    return 4.5 / (4.5 + rz2 + d);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pos = _project(widget.x, widget.y, widget.z);
+    final perspective = _getScale();
 
     if (perspective < 0.1) return const SizedBox.shrink();
 
-    final cardWidth = 90.0 * cardScale;
-    final cardHeight = 120.0 * cardScale;
+    final cardScale = perspective * widget.zoom;
+    final cardWidth = 80.0 * cardScale;
+    final cardHeight = 110.0 * cardScale;
 
     return Positioned(
       left: pos.dx - cardWidth / 2,
-      top: pos.dy - cardHeight,
+      top: pos.dy - cardHeight + 8 * cardScale,
       child: GestureDetector(
         onTap: widget.onTap,
         child: MouseRegion(
@@ -93,25 +97,39 @@ class _ProductDisplay3DState extends State<ProductDisplay3D> {
               child: Column(
                 children: [
                   Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4 * cardScale),
-                      child: CachedNetworkImage(
-                        imageUrl: widget.product.imageUrl,
-                        fit: BoxFit.cover,
-                        width: cardWidth,
-                        placeholder: (_, url) => Container(
-                          color: Colors.grey.shade200,
-                          child: const Center(
-                            child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4 * cardScale),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(30),
+                            blurRadius: 4 * cardScale,
+                            offset: Offset(0, 2 * cardScale),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4 * cardScale),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.product.imageUrl,
+                          fit: BoxFit.cover,
+                          width: cardWidth,
+                          placeholder: (_, url) => Container(
+                            color: Colors.grey.shade200,
+                            child: const Center(
+                              child: SizedBox(
+                                width: 14,
+                                height: 14,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 1.5),
+                              ),
                             ),
                           ),
-                        ),
-                        errorWidget: (_, url, err) => Container(
-                          color: Colors.grey.shade200,
-                          child: const Icon(Icons.image_not_supported, size: 20),
+                          errorWidget: (_, url, err) => Container(
+                            color: Colors.grey.shade200,
+                            child: Icon(Icons.image_not_supported,
+                                size: 14 * cardScale),
+                          ),
                         ),
                       ),
                     ),
@@ -120,7 +138,7 @@ class _ProductDisplay3DState extends State<ProductDisplay3D> {
                   Text(
                     widget.product.title,
                     style: TextStyle(
-                      fontSize: 8 * cardScale,
+                      fontSize: 7 * cardScale,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey.shade800,
                     ),
@@ -131,7 +149,7 @@ class _ProductDisplay3DState extends State<ProductDisplay3D> {
                   Text(
                     formatCurrency(widget.product.price),
                     style: TextStyle(
-                      fontSize: 9 * cardScale,
+                      fontSize: 8 * cardScale,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF2D7D46),
                     ),

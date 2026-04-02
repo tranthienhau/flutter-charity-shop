@@ -14,41 +14,44 @@ class ShopScene3D extends ConsumerStatefulWidget {
 }
 
 class _ShopScene3DState extends ConsumerState<ShopScene3D> {
-  double _rotX = -0.15;
+  double _rotX = -0.05;
   double _rotY = 0.0;
   double _zoom = 1.0;
 
-  // Product shelf positions in 3D space (x, y, z)
+  // Product shelf positions on back wall (x, y, z)
   static const _shelfPositions = <List<double>>[
-    // Left wall, bottom shelf
-    [-2.9, 0.45, -1.8],
-    [-2.9, 0.45, -0.8],
-    // Left wall, top shelf
-    [-2.9, -0.25, -1.8],
-    [-2.9, -0.25, -0.8],
-    // Right wall, bottom shelf
-    [2.9, 0.45, -1.8],
-    [2.9, 0.45, -0.8],
-    // Right wall, top shelf
-    [2.9, -0.25, -1.8],
-    [2.9, -0.25, -0.8],
+    // Bottom shelf - 4 products
+    [-1.65, 0.1, -2.7],
+    [-0.55, 0.1, -2.7],
+    [0.55, 0.1, -2.7],
+    [1.65, 0.1, -2.7],
+    // Top shelf - 4 products
+    [-1.65, -0.85, -2.7],
+    [-0.55, -0.85, -2.7],
+    [0.55, -0.85, -2.7],
+    [1.65, -0.85, -2.7],
   ];
 
-  void _onPanUpdate(DragUpdateDetails details) {
-    setState(() {
-      _rotY += details.delta.dx * 0.005;
-      _rotY = _rotY.clamp(-0.6, 0.6);
-      _rotX += details.delta.dy * 0.003;
-      _rotX = _rotX.clamp(-0.5, 0.15);
-    });
+  double _prevScale = 1.0;
+
+  void _onScaleStart(ScaleStartDetails details) {
+    _prevScale = _zoom;
   }
 
   void _onScaleUpdate(ScaleUpdateDetails details) {
-    if (details.pointerCount >= 2) {
-      setState(() {
-        _zoom = (_zoom * details.scale).clamp(0.6, 1.8);
-      });
-    }
+    setState(() {
+      // Single finger: orbit
+      if (details.pointerCount == 1) {
+        _rotY += details.focalPointDelta.dx * 0.005;
+        _rotY = _rotY.clamp(-0.6, 0.6);
+        _rotX += details.focalPointDelta.dy * 0.003;
+        _rotX = _rotX.clamp(-0.5, 0.15);
+      }
+      // Two fingers: zoom
+      if (details.pointerCount >= 2) {
+        _zoom = (_prevScale * details.scale).clamp(0.6, 1.8);
+      }
+    });
   }
 
   @override
@@ -59,14 +62,14 @@ class _ShopScene3DState extends ConsumerState<ShopScene3D> {
       builder: (context, constraints) {
         final sceneSize = Size(constraints.maxWidth, constraints.maxHeight);
 
-        return GestureDetector(
-          onPanUpdate: _onPanUpdate,
-          onScaleUpdate: _onScaleUpdate,
-          child: Stack(
-            clipBehavior: Clip.hardEdge,
-            children: [
-              // Room background
-              CustomPaint(
+        return Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // Orbit/zoom gesture on the room background
+            GestureDetector(
+              onScaleStart: _onScaleStart,
+              onScaleUpdate: _onScaleUpdate,
+              child: CustomPaint(
                 size: sceneSize,
                 painter: RoomPainter(
                   rotationX: _rotX,
@@ -74,22 +77,24 @@ class _ShopScene3DState extends ConsumerState<ShopScene3D> {
                   zoom: _zoom,
                 ),
               ),
+            ),
 
-              // Products on shelves
-              ...productsAsync.when(
-                data: (products) => _buildProductDisplays(
-                  products,
-                  sceneSize,
-                ),
-                loading: () => <Widget>[],
-                error: (_, st) => <Widget>[],
+            // Products on shelves (above gesture layer so taps work)
+            ...productsAsync.when(
+              data: (products) => _buildProductDisplays(
+                products,
+                sceneSize,
               ),
+              loading: () => <Widget>[],
+              error: (_, st) => <Widget>[],
+            ),
 
-              // Orbit hint
-              Positioned(
-                bottom: 16,
-                left: 0,
-                right: 0,
+            // Orbit hint
+            Positioned(
+              bottom: 16,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
                 child: Center(
                   child: AnimatedOpacity(
                     opacity: _rotY == 0.0 ? 0.6 : 0.0,
@@ -114,8 +119,8 @@ class _ShopScene3DState extends ConsumerState<ShopScene3D> {
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

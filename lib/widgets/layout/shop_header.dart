@@ -28,7 +28,7 @@ class ShopHeader extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Text('🏪', style: TextStyle(fontSize: 24)),
+          const Icon(Icons.storefront, size: 24, color: Color(0xFF16A34A)),
           const SizedBox(width: 8),
           const Text(
             'Charity Shop',

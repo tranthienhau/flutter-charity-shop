@@ -2,6 +2,12 @@
 
 An immersive 3D charitable shopping experience built with Flutter, featuring a perspective-rendered 3D shop room, Shopify Storefront API integration, and a full shopping cart.
 
+## Screenshots
+
+| 3D Shop Scene | Product Detail | Shopping Cart |
+|:---:|:---:|:---:|
+| ![Main](screenshots/01_main.png) | ![Modal](screenshots/02_product_modal.png) | ![Cart](screenshots/03_cart.png) |
+
 ## Features
 
 - **3D Environment** - Custom perspective-projected shop room rendered with `CustomPainter` (walls, floor, ceiling, shelves, counter, sign, plants)
